@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="fr">
+
+<head>
+    <meta charset="utf-8">
+    <meta content="width=device-width, initial-scale=1.0" name="viewport">
+    <title>SeaDrop</title>
+    <link href="https://fonts.googleapis.com" rel="preconnect">
+    <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#197fe6',
+                        pearl: '#f9fafb',
+                        steel: '#475569',
+                    },
+                    borderRadius: {
+                        'custom': '8px',
+                    }
+                }
+            }
+        }
+    </script>
+    <style data-purpose="typography">
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+    </style>
+    <style data-purpose="animations">
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        .animate-spin-custom {
+            animation: spin 1s linear infinite;
+        }
+
+        .fade-in {
+            animation: fadeIn 0.3s ease-in-out forwards;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+    </style>
+</head>
+
+<body class="bg-slate-50 text-slate-900 min-h-screen flex items-center justify-center p-6">
+    <main class="w-full max-w-2xl flex flex-col items-center gap-8" data-purpose="main-content">
+        <header class="text-center space-y-2">
+            <h1 class="text-3xl font-bold tracking-tight text-slate-800" data-purpose="page-title">SeaDrop</h1>
+            <p class="text-slate-500 font-medium">Plateforme d'envoi de documents</p>
+        </header>
+        <section class="w-full bg-white p-8 rounded-custom shadow-sm border border-slate-200"
+            data-purpose="upload-card">
+            <div class="relative border-2 border-dashed border-slate-300 rounded-custom p-12 flex flex-col items-center justify-center transition-all duration-200 cursor-pointer bg-pearl group hover:border-primary"
+                data-purpose="drag-drop-area" id="drop-zone">
+                <div class="flex flex-col items-center text-center space-y-4" id="ui-idle">
+                    <div class="p-4 bg-blue-50 rounded-full text-primary group-hover:scale-110 transition-transform">
+                        <svg class="w-10 h-10" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"
+                            xmlns="http://www.w3.org/2000/svg">
+                            <path
+                                d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5"
+                                stroke-linecap="round" stroke-linejoin="round"></path>
+                        </svg>
+                    </div>
+                    <div class="space-y-1">
+                        <p class="text-lg font-semibold text-slate-700">Glissez votre PDF ici ou cliquez pour
+                            parcourir</p>
+                        <p class="text-sm text-slate-400">Taille maximale 50 Mo</p>
+                    </div>
+                </div>
+
+                <div class="hidden flex flex-col items-center text-center space-y-4 fade-in" id="ui-loading">
+                    <div class="w-12 h-12 border-4 border-slate-200 border-t-primary rounded-full animate-spin-custom">
+                    </div>
+                    <p class="text-slate-700 font-medium">Nettoyage et transfert en cours...</p>
+                </div>
+                <div class="hidden flex flex-col items-center text-center space-y-4 fade-in" id="ui-success">
+                    <div class="p-4 bg-green-50 rounded-full text-green-600">
+                        <svg class="w-10 h-10" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"
+                            xmlns="http://www.w3.org/2000/svg">
+                            <path d="M4.5 12.75l6 6 9-13.5" stroke-linecap="round" stroke-linejoin="round"></path>
+                        </svg>
+                    </div>
+                    <div class="space-y-1">
+                        <p class="text-lg font-semibold text-green-700">Document sécurisé avec succès</p>
+                        <button class="text-sm text-primary hover:underline font-medium" onclick="resetUI()">Envoyer un
+                            autre fichier</button>
+                    </div>
+                </div>
+                <div class="hidden flex flex-col items-center text-center space-y-4 fade-in" id="ui-error">
+                    <div class="p-4 bg-red-50 rounded-full text-red-600">
+                        <svg class="w-10 h-10" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"
+                            xmlns="http://www.w3.org/2000/svg">
+                            <path d="M12 9v3.75m9-.75a9 9 0 11-18 0 9 9 0 0118 0zm-9 3.75h.008v.008H12v-.008z"
+                                stroke-linecap="round" stroke-linejoin="round"></path>
+                        </svg>
+                    </div>
+                    <div class="space-y-1">
+                        <p class="text-lg font-semibold text-red-700" id="error-message">Erreur lors de
+                            l'import</p>
+                        <button class="text-sm text-red-500 hover:underline font-medium"
+                            onclick="resetUI()">Réessayer</button>
+                    </div>
+                </div>
+                <input accept="application/pdf" class="hidden" id="file-input" type="file">
+            </div>
+        </section>
+    </main>
+    <script data-purpose="ui-interactions">
+        const dropZone = document.getElementById('drop-zone');
+        const fileInput = document.getElementById('file-input');
+        const uiIdle = document.getElementById('ui-idle');
+        const uiLoading = document.getElementById('ui-loading');
+        const uiSuccess = document.getElementById('ui-success');
+        const uiError = document.getElementById('ui-error');
+        const errorMessage = document.getElementById('error-message');
+
+        ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+            dropZone.addEventListener(eventName, preventDefaults, false);
+        });
+
+        function preventDefaults(e) {
+            e.preventDefault();
+            e.stopPropagation();
+        }
+
+        ['dragenter', 'dragover'].forEach(eventName => {
+            dropZone.addEventListener(eventName, () => {
+                dropZone.classList.add('bg-blue-50', 'border-primary', 'border-4');
+            });
+        });
+
+        ['dragleave', 'drop'].forEach(eventName => {
+            dropZone.addEventListener(eventName, () => {
+                dropZone.classList.remove('bg-blue-50', 'border-primary', 'border-4');
+            });
+        });
+
+        dropZone.addEventListener('drop', handleDrop);
+        dropZone.addEventListener('click', () => fileInput.click());
+        fileInput.addEventListener('change', (e) => handleFiles(e.target.files));
+
+        function handleDrop(e) {
+            const dt = e.dataTransfer;
+            const files = dt.files;
+            handleFiles(files);
+        }
+
+        function handleFiles(files) {
+            if (files.length === 0) return;
+            const file = files[0];
+
+            if (file.type !== 'application/pdf') {
+                showError('Seuls les fichiers PDF sont autorisés.');
+                return;
+            }
+
+            processUpload(file);
+        }
+
+        function processUpload(file) {
+            uiIdle.classList.add('hidden');
+            uiError.classList.add('hidden');
+            uiLoading.classList.remove('hidden');
+
+            const formData = new FormData();
+            formData.append('file', file);
+
+            fetch('/upload', {
+                method: 'POST',
+                body: formData
+            })
+                .then(response => {
+                    if (!response.ok) {
+                        return response.json().then(err => { throw new Error(err.detail || "Erreur lors de l'import"); });
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    uiLoading.classList.add('hidden');
+                    uiSuccess.classList.remove('hidden');
+                })
+                .catch(error => {
+                    showError(error.message);
+                });
+        }
+
+        function showError(msg) {
+            uiIdle.classList.add('hidden');
+            uiLoading.classList.add('hidden');
+            uiSuccess.classList.add('hidden');
+            uiError.classList.remove('hidden');
+            errorMessage.textContent = msg;
+        }
+
+        function resetUI() {
+            uiLoading.classList.add('hidden');
+            uiSuccess.classList.add('hidden');
+            uiError.classList.add('hidden');
+            uiIdle.classList.remove('hidden');
+            fileInput.value = '';
+        }
+    </script>
+</body>
+
+</html>
