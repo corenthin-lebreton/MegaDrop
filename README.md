@@ -1,4 +1,4 @@
-# SeaDrop
+# MegaDrop
 
 Plateforme sécurisée de dépôt de documents PDF. Chaque fichier est validé par magic bytes, re-sérialisé via pikepdf pour neutraliser les scripts actifs, puis téléversé sur Mega.nz.
 
