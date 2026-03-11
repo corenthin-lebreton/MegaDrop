@@ -1,4 +1,4 @@
-FROM python:3.11-slim-bookworm AS builder
+FROM python:3.10-slim-bookworm AS builder
 
 ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1
@@ -14,7 +14,7 @@ COPY requirements.txt .
 RUN /app/venv/bin/pip install --no-cache-dir --upgrade pip && /app/venv/bin/pip install --no-cache-dir -r requirements.txt
 
 
-FROM python:3.11-slim-bookworm AS final
+FROM python:3.10-slim-bookworm AS final
 
 ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1 \
