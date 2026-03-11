@@ -6,5 +6,4 @@ python-magic-bin>=0.4.14; sys_platform == 'win32'
 pikepdf>=9.2.0
 requests>=2.31.0
 mega.py>=1.0.8
-tenacity>=8.2.0
 python-dotenv>=1.0.0
